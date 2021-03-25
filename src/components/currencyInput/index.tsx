@@ -1,3 +1,4 @@
+import BN from 'bn.js';
 import React from "react";
 import { Card, Select } from "antd";
 import { NumericInput } from "../numericInput";
@@ -12,9 +13,14 @@ import "./styles.less";
 import { useConnectionConfig } from "../../utils/connection";
 import { PoolIcon, TokenIcon } from "../tokenIcon";
 import { PublicKey } from "@solana/web3.js";
+import { MintInfo } from "@solana/spl-token";
 import { PoolInfo, TokenAccount } from "../../models";
 
 const { Option } = Select;
+
+function balanceNumber(acc: TokenAccount, mint: MintInfo): number {
+  return acc.info.amount.div(new BN(10).pow(new BN(mint.decimals))).toNumber();
+}
 
 export const TokenDisplay = (props: {
   name: string;
@@ -30,8 +36,7 @@ export const TokenDisplay = (props: {
   let hasBalance: boolean = false;
   if (showBalance) {
     if (tokenAccount && tokenMint) {
-      balance =
-        tokenAccount.info.amount.toNumber() / Math.pow(10, tokenMint.decimals);
+      balance = balanceNumber(tokenAccount, tokenMint);
       hasBalance = balance > 0;
     }
   }
@@ -107,7 +112,7 @@ export const CurrencyInput = (props: {
   // group accounts by mint and use one with biggest balance
   const grouppedUserAccounts = userAccounts
     .sort((a, b) => {
-      return b.info.amount.toNumber() - a.info.amount.toNumber();
+      return b.info.amount.gt(a.info.amount) ? 1 : -1;
     })
     .reduce((map, acc) => {
       const mint = acc.info.mint.toBase58();
@@ -171,9 +176,7 @@ export const CurrencyInput = (props: {
       (a) => a.info.mint.toBase58() === props.mint
     );
     if (currentAccount && mint) {
-      return (
-        currentAccount.info.amount.toNumber() / Math.pow(10, mint.decimals)
-      );
+      return balanceNumber(currentAccount, mint);
     }
 
     return 0;
