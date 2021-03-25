@@ -1,8 +1,7 @@
-import BN from 'bn.js';
 import React from "react";
 import { Card, Select } from "antd";
 import { NumericInput } from "../numericInput";
-import { getPoolName, getTokenName, isKnownMint } from "../../utils/utils";
+import { convert, getPoolName, getTokenName, isKnownMint } from "../../utils/utils";
 import {
   useUserAccounts,
   useCachedPool,
@@ -13,14 +12,9 @@ import "./styles.less";
 import { useConnectionConfig } from "../../utils/connection";
 import { PoolIcon, TokenIcon } from "../tokenIcon";
 import { PublicKey } from "@solana/web3.js";
-import { MintInfo } from "@solana/spl-token";
 import { PoolInfo, TokenAccount } from "../../models";
 
 const { Option } = Select;
-
-function balanceNumber(acc: TokenAccount, mint: MintInfo): number {
-  return acc.info.amount.div(new BN(10).pow(new BN(mint.decimals))).toNumber();
-}
 
 export const TokenDisplay = (props: {
   name: string;
@@ -36,7 +30,7 @@ export const TokenDisplay = (props: {
   let hasBalance: boolean = false;
   if (showBalance) {
     if (tokenAccount && tokenMint) {
-      balance = balanceNumber(tokenAccount, tokenMint);
+      balance = convert(tokenAccount, tokenMint);
       hasBalance = balance > 0;
     }
   }
@@ -176,7 +170,7 @@ export const CurrencyInput = (props: {
       (a) => a.info.mint.toBase58() === props.mint
     );
     if (currentAccount && mint) {
-      return balanceNumber(currentAccount, mint);
+      return convert(currentAccount, mint);
     }
 
     return 0;
